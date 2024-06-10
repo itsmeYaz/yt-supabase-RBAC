@@ -1,5 +1,6 @@
 'use server'
 
+import { readUserSession } from '@/lib/actions'
 import { createSupabaseAdmin } from '@/lib/supabase'
 
 export async function createMember(data: {
@@ -10,6 +11,14 @@ export async function createMember(data: {
   password: string
   confirm: string
 }) {
+  //prevent a non admin to access admin privillage
+  const { data: userSession } = await readUserSession()
+  if (userSession.session?.user.user_metadata.role !== 'admin') {
+    return JSON.stringify({
+      error: { message: "You don't have the admin privillage" },
+    })
+  }
+
   const supabase = await createSupabaseAdmin()
   //create account
   const createResult = await supabase.auth.admin.createUser({
