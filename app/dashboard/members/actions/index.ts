@@ -4,6 +4,7 @@ import { readUserSession } from '@/lib/actions'
 import { createSupabaseAdmin, createSupbaseServerClient } from '@/lib/supabase'
 import { revalidatePath, unstable_noStore } from 'next/cache'
 
+//Create Member
 export async function createMember(data: {
   name: string
   role: 'user' | 'admin'
@@ -34,9 +35,11 @@ export async function createMember(data: {
   if (createResult.error?.message) {
     return JSON.stringify(createResult)
   } else {
-    const memberResult = await supabase
-      .from('member')
-      .insert({ name: data.name, id: createResult.data.user?.id })
+    const memberResult = await supabase.from('member').insert({
+      name: data.name,
+      id: createResult.data.user?.id,
+      email: data.email,
+    })
     if (memberResult.error?.message) {
       return JSON.stringify(memberResult)
     } else {
@@ -53,9 +56,22 @@ export async function createMember(data: {
   //create member
   //create permission
 }
-export async function updateMemberById(id: string) {
-  console.log('update member')
+
+//Update Member
+export async function updateMemberBasicsById(
+  id: string,
+  data: {
+    name: string
+  },
+) {
+  const supabase = await createSupbaseServerClient()
+
+  const result = await supabase.from('member').update(data).eq('id', id)
+  revalidatePath('/dashboard/member')
+  return JSON.stringify(result)
 }
+
+//delete member
 export async function deleteMemberById(user_id: string) {
   //admin only
   const { data: userSession } = await readUserSession()

@@ -59,7 +59,7 @@ export default async function ListOfMembers() {
 
             <div className='flex items-center gap-2'>
               {isAdmin && <DeleteMember user_id={permission.member.id} />}
-              <EditMember isAdmin={isAdmin} />
+              <EditMember isAdmin={isAdmin} permission={permission} />
             </div>
           </div>
         )

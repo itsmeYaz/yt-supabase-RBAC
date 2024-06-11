@@ -3,8 +3,15 @@ import BasicForm from './BasicForm'
 import AccountForm from './AccountForm'
 import AdvanceForm from './AdvanceForm'
 import { cn } from '@/lib/utils'
+import { IPermission } from '@/lib/types'
 
-export default function EditForm({ isAdmin }: { isAdmin: boolean }) {
+export default function EditForm({
+  isAdmin,
+  permission,
+}: {
+  isAdmin: boolean
+  permission: IPermission
+}) {
   return (
     <Tabs defaultValue='basic' className='w-full space-y-5'>
       <TabsList
@@ -20,16 +27,16 @@ export default function EditForm({ isAdmin }: { isAdmin: boolean }) {
         )}
       </TabsList>
       <TabsContent value='basic'>
-        <BasicForm />
+        <BasicForm permission={permission} />
       </TabsContent>
 
       {isAdmin && (
         <>
           <TabsContent value='account'>
-            <AccountForm />
+            <AccountForm permission={permission} />
           </TabsContent>
           <TabsContent value='advance'>
-            <AdvanceForm />
+            <AdvanceForm permission={permission} />
           </TabsContent>
         </>
       )}
