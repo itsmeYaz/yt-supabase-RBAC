@@ -57,7 +57,7 @@ export async function createMember(data: {
   //create permission
 }
 
-//Update Member
+//Update Basic Member
 export async function updateMemberBasicsById(
   id: string,
   data: {
@@ -69,6 +69,89 @@ export async function updateMemberBasicsById(
   const result = await supabase.from('member').update(data).eq('id', id)
   revalidatePath('/dashboard/member')
   return JSON.stringify(result)
+}
+
+//Update Member Advance Only admin
+export async function updateMemberAdvanceById(
+  permission_id: string,
+  user_id: string,
+  data: {
+    status: 'active' | 'resigned'
+    role: 'user' | 'admin'
+  },
+) {
+  //prevent a non admin to access admin privillage
+  const { data: userSession } = await readUserSession()
+  if (userSession.session?.user.user_metadata.role !== 'admin') {
+    return JSON.stringify({
+      error: { message: "You don't have the admin privillage" },
+    })
+  }
+
+  //Update user metadata
+  const supabaseAdmin = await createSupabaseAdmin()
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+    user_metadata: { role: data.role },
+  })
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult)
+  } else {
+    const supabase = await createSupbaseServerClient()
+    const result = await supabase
+      .from('permission')
+      .update(data)
+      .eq('id', permission_id)
+    revalidatePath('/dashboard/member')
+    return JSON.stringify(result)
+  }
+}
+
+//Update Account
+export async function updateMemberAccountById(
+  user_id: string,
+  data: {
+    email: string
+    password?: string | undefined
+    confirm?: string | undefined
+  },
+) {
+  //prevent a non admin to access admin privillage
+  const { data: userSession } = await readUserSession()
+  if (userSession.session?.user.user_metadata.role !== 'admin') {
+    return JSON.stringify({
+      error: { message: "You don't have the admin privillage" },
+    })
+  }
+
+  const updateObject: {
+    email: string
+    password?: string | undefined
+  } = { email: data.email }
+
+  if (data.password) {
+    updateObject['password'] = data.password
+  }
+
+  //Update user metadata
+  const supabaseAdmin = await createSupabaseAdmin()
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(
+    user_id,
+    updateObject,
+  )
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult)
+  } else {
+    //pwede dito SupabaseAdmin na pang query para di na maga add ng policy
+    const supabase = await createSupbaseServerClient()
+    const result = await supabase
+      .from('member')
+      .update({ email: data.email })
+      .eq('id', user_id)
+    revalidatePath('/dashboard/member')
+    return JSON.stringify(result)
+  }
 }
 
 //delete member
